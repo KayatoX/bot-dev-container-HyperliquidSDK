@@ -8,6 +8,10 @@ authors = ["Your Name <you@example.com>"]
 python = "^3.11"
 ipykernel = "^6.17.0"
 pymongo = "^4.3.2"
+hyperliquid-python-sdk = "^0.9.0"
+plotly = "^5.24.1"
+pandas = "^2.2.3"
+requests = "^2.32.3"
 
 [tool.poetry.dev-dependencies]
 
