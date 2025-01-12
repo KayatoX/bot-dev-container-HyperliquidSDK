@@ -4,7 +4,7 @@ ENVIRONMENT=TESTNET  # または MAINNET
 # TESTNET設定
 TESTNET_SECRET_KEY=0xxxxxxxxxxxxxxxxxxxxxxxx
 TESTNET_ACCOUNT_ADDRESS=0xxxxxxxxxxxxxxxxxxxxxxxx
-TESTNET_API_URL=https://testnet.hyperliquid.xyz
+TESTNET_API_URL=https://api.hyperliquid-testnet.xyz
 
 # MAINNET設定
 MAINNET_SECRET_KEY=0xxxxxxxxxxxxxxxxxxxxxxxx

@@ -1,36 +1,88 @@
-from dotenv import load_dotenv
-from pathlib import Path
 import os
+import time
+import json
+from dotenv import load_dotenv
+from eth_account import Account
+from eth_account.messages import encode_defunct
+from hyperliquid.api import API
 
-def debug_env_file(path):
+# 環境変数のロード
+def load_environment():
+    load_dotenv()
+    environment = os.getenv("ENVIRONMENT")
+    if not environment:
+        raise ValueError("ENVIRONMENTが設定されていません。")
+
+    secret_key = os.getenv(f"{environment}_SECRET_KEY")
+    api_wallet_address = os.getenv(f"{environment}_ACCOUNT_ADDRESS")
+    api_url = os.getenv(f"{environment}_API_URL")
+
+    if not all([secret_key, api_wallet_address, api_url]):
+        raise ValueError("必要な環境変数が不足しています。")
+
+    return secret_key, api_wallet_address, api_url
+
+# 注文を作成して送信する関数
+def place_order(include_builder=False):
     try:
-        with open(path, "r") as f:
-            print("\nContents of .env file:")
-            print(f.read())
-    except FileNotFoundError:
-        print(f"Error: .env file not found at {path}")
+        # 環境変数を取得
+        secret_key, api_wallet_address, api_url = load_environment()
 
-def main():
-    # プロジェクトルートの .env ファイルを探索
-    env_path = Path(__file__).resolve().parent.parent / ".env"  # src ディレクトリの親を探索
-    print("Expected .env path:", env_path)
+        # APIインスタンス作成
+        api = API(api_url)
 
-    # ファイルの存在を確認
-    if not env_path.exists():
-        print("Error: .env file not found at", env_path)
-        return
+        # Nonce生成
+        nonce = int(time.time() * 1000)
 
-    # .env ファイルを読み込む
-    load_dotenv(dotenv_path=env_path)
+        # 注文データ
+        order_action = {
+            "type": "order",
+            "orders": [
+                {
+                    "a": 0,  # アセットID（例: BTCは0）
+                    "b": True,  # 買い注文
+                    "p": "30000",  # 価格
+                    "s": "0.01",  # サイズ
+                    "r": False,  # ポジション削減しない
+                    "t": {"limit": {"tif": "Gtc"}}  # Good till canceled
+                }
+            ]
+        }
 
-    # 環境変数を確認
-    print("ENVIRONMENT:", os.getenv("ENVIRONMENT"))
-    print("TESTNET_SECRET_KEY:", os.getenv("TESTNET_SECRET_KEY"))
-    print("TESTNET_ACCOUNT_ADDRESS:", os.getenv("TESTNET_ACCOUNT_ADDRESS"))
-    print("TESTNET_API_URL:", os.getenv("TESTNET_API_URL"))
+        # builderFeeを追加（必要な場合のみ）
+        if include_builder:
+            order_action["builderFee"] = 0.01  # 数値形式
 
-    # デバッグ用: .env ファイルの内容を出力
-    debug_env_file(env_path)
+        order_data = {
+            "action": order_action,
+            "nonce": nonce,
+            "vaultAddress": api_wallet_address
+        }
 
+        # メッセージのエンコード
+        message = encode_defunct(text=json.dumps(order_data, separators=(",", ":")))
+
+        # 署名の生成
+        signed_message = Account.sign_message(message, private_key=secret_key)
+
+        # 署名データの追加
+        signature = {
+            "r": hex(signed_message.r)[2:],
+            "s": hex(signed_message.s)[2:],
+            "v": signed_message.v
+        }
+        order_data["signature"] = signature
+
+        # リクエストデータをデバッグ出力
+        print("Order data being sent:", json.dumps(order_data, indent=2))
+
+        # 注文リクエストを送信
+        response = api.post("/exchange", order_data)
+        print("注文が正常に実行されました:", json.dumps(response, indent=2))
+
+    except Exception as e:
+        print("エラーが発生しました:", str(e))
+
+# 実行（builderFeeを含む/含まないを切り替えてテスト）
 if __name__ == "__main__":
-    main()
+    place_order(include_builder=False)  # builderFeeなしでテス
