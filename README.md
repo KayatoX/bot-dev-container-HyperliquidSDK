@@ -19,11 +19,12 @@ Click the _Open in GitHub Codespaces_ badge.
 ## Add Setting
 
 ```
-poetry update
-poetry add hyperliquid-python-sdk
-poetry add plotly
-poetry add pandas
+poetry update 
+poetry add hyperliquid-python-sdk 
+poetry add plotly 
+poetry add pandas 
 poetry add requests
+poetry add python-dotenv
 ```
 
 ## Add File
