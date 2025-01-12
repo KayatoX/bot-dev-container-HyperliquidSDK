@@ -17,11 +17,14 @@ Awesome Dev Containers template for developing a trading bot.
 Click the _Open in GitHub Codespaces_ badge.
 
 ## Add Setting
+
+```
 poetry update
 poetry add hyperliquid-python-sdk
 poetry add plotly
 poetry add pandas
 poetry add requests
+```
 
 ## Add File
 .env
